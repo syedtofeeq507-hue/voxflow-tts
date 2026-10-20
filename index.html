@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VoxFlow – Free Online Text to Speech Reader | Unlimited, No Sign-up</title>
+<meta name="description" content="VoxFlow is a free, unlimited text to speech tool that runs in your browser. Choose from dozens of natural voices and accents, adjust speed, pitch and volume, and export audio as WAV or MP3.">
+<meta name="keywords" content="text to speech, free tts, online voice generator, text reader, speech synthesis, wav export, mp3 export">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0b1020">
+<meta property="og:type" content="website">
+<meta property="og:title" content="VoxFlow – Free Online Text to Speech">
+<meta property="og:description" content="Convert text to natural speech instantly. 100% free, private, and runs in your browser.">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Set your production URL: <link rel="canonical" href="https://your-domain.com/"> -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%238b5cf6'/%3E%3Cstop offset='1' stop-color='%2306b6d4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Cpath d='M8 13v6M12 10v12M16 7v18M20 10v12M24 13v6' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"VoxFlow Text to Speech","applicationCategory":"MultimediaApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Free unlimited browser-based text to speech with multiple voices, accents and audio export."}
+</script>
+<script>
+  // Apply theme before first paint to avoid flash
+  (function () {
+    try {
+      var t = localStorage.getItem('vf-theme');
+      if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      if (t === 'dark') document.documentElement.classList.add('dark');
+    } catch (e) {}
+  })();
+</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'] },
+        colors: { brand: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed' }, accent: { 400: '#22d3ee', 500: '#06b6d4' } }
+      }
+    }
+  };
+</script>
+<style>
+  :root { --accent: #8b5cf6; --accent2: #06b6d4; }
+  html { scroll-behavior: smooth; }
+  body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  .glass {
+    background: rgba(255,255,255,.66);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid rgba(255,255,255,.75);
+    box-shadow: 0 10px 40px -14px rgba(99,102,241,.28);
+  }
+  .dark .glass {
+    background: rgba(255,255,255,.05);
+    border-color: rgba(255,255,255,.10);
+    box-shadow: 0 10px 50px -16px rgba(139,92,246,.40);
+  }
+
+  /* Range sliders */
+  input[type=range] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 999px; outline: none; cursor: pointer;
+    background: linear-gradient(to right, var(--accent) var(--p, 50%), rgba(148,163,184,.35) var(--p, 50%));
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 3px solid var(--accent);
+    box-shadow: 0 0 0 4px rgba(139,92,246,.18), 0 2px 8px rgba(0,0,0,.25); transition: transform .15s;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 3px solid var(--accent);
+    box-shadow: 0 0 0 4px rgba(139,92,246,.18), 0 2px 8px rgba(0,0,0,.25);
+  }
+  input[type=range]:active::-webkit-slider-thumb { transform: scale(1.15); }
+  input[type=range]:focus-visible { box-shadow: 0 0 0 3px rgba(139,92,246,.35); }
+
+  /* Visualizer */
+  .viz { display: flex; align-items: center; gap: 3px; height: 36px; }
+  .viz i { display: block; width: 3px; height: 6px; border-radius: 3px; background: linear-gradient(to top, var(--accent), var(--accent2)); opacity: .55; transition: opacity .3s; }
+  .viz.on i { opacity: 1; animation: bar 900ms ease-in-out infinite; }
+  .viz.paused i { animation-play-state: paused; opacity: .8; }
+  @keyframes bar { 0%,100% { height: 6px; } 50% { height: 32px; } }
+
+  /* Animations */
+  @keyframes floaty { 0%,100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(30px,-40px,0) scale(1.08); } }
+  .blob { animation: floaty 18s ease-in-out infinite; will-change: transform; }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(.96); } to { opacity: 1; transform: none; } }
+  @keyframes toastOut { to { opacity: 0; transform: translateY(8px) scale(.96); } }
+  .toast { animation: toastIn .25s ease-out both; }
+  .toast.out { animation: toastOut .25s ease-in both; }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(16px) scale(.97); } to { opacity: 1; transform: none; } }
+  .modal-panel { animation: modalIn .22s ease-out both; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { animation: spin 1s linear infinite; }
+
+  .scroll-thin::-webkit-scrollbar { width: 6px; }
+  .scroll-thin::-webkit-scrollbar-thumb { background: rgba(139,92,246,.4); border-radius: 6px; }
+  details > summary { list-style: none; }
+  details > summary::-webkit-details-marker { display: none; }
+  details[open] .chev { transform: rotate(180deg); }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; } }
+</style>
+<style type="text/tailwindcss">
+  @layer components {
+    .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none active:scale-[.97]; }
+    .btn-primary { @apply btn text-white bg-gradient-to-r from-brand-500 to-accent-500 shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 hover:brightness-110; }
+    .btn-soft { @apply btn bg-slate-900/5 text-slate-700 hover:bg-slate-900/10 dark:bg-white/10 dark:text-slate-100 dark:hover:bg-white/15; }
+    .btn-danger { @apply btn bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 dark:text-rose-300; }
+    .chip { @apply inline-flex items-center gap-1.5 rounded-full border border-slate-300/70 bg-white/50 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-brand-500 hover:text-brand-600 hover:-translate-y-0.5 dark:border-white/15 dark:bg-white/5 dark:text-slate-200 dark:hover:text-brand-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500; }
+    .field { @apply w-full rounded-xl border border-slate-300/70 bg-white/70 px-3 py-2.5 text-sm text-slate-800 shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100; }
+    .ad-slot { @apply mx-auto flex shrink-0 flex-col items-center justify-center rounded-lg border border-dashed border-slate-400/60 bg-slate-200/40 text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:border-white/20 dark:bg-white/5 dark:text-slate-400; }
+    .icon { @apply h-4 w-4 shrink-0; }
+  }
+</style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-cyan-50 text-slate-800 antialiased transition-colors duration-300 dark:from-[#070b17] dark:via-[#0d1224] dark:to-[#0a1522] dark:text-slate-100">
+
+<!-- Ambient glow background -->
+<div aria-hidden="true" class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+  <div class="blob absolute -left-24 -top-24 h-96 w-96 rounded-full bg-brand-500/25 blur-3xl dark:bg-brand-500/30"></div>
+  <div class="blob absolute -right-20 top-1/3 h-[28rem] w-[28rem] rounded-full bg-accent-500/20 blur-3xl dark:bg-accent-500/20" style="animation-delay:-6s"></div>
+  <div class="blob absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-fuchsia-500/15 blur-3xl" style="animation-delay:-11s"></div>
+</div>
+
+<noscript><div class="bg-rose-600 p-3 text-center text-sm text-white">VoxFlow needs JavaScript to run the speech engine. Please enable it.</div></noscript>
+
+<!-- ===================== HEADER ===================== -->
+<header class="glass sticky top-0 z-30 !rounded-none !border-x-0 !border-t-0">
+  <div class="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
+    <a href="#" class="flex items-center gap-2.5" aria-label="VoxFlow home">
+      <span class="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-accent-500 shadow-lg shadow-brand-500/40">
+        <svg viewBox="0 0 24 24" class="h-5 w-5 text-white" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg>
+      </span>
+      <span class="text-lg font-extrabold tracking-tight">Vox<span class="bg-gradient-to-r from-brand-500 to-accent-500 bg-clip-text text-transparent">Flow</span></span>
+    </a>
+    <nav class="hidden items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-300 md:flex" aria-label="Primary">
+      <a class="hover:text-brand-500" href="#workspace">Converter</a>
+      <a class="hover:text-brand-500" href="#features">Features</a>
+      <a class="hover:text-brand-500" href="#faq">FAQ</a>
+    </nav>
+    <div class="flex items-center gap-2">
+      <button id="btnUpgradeTop" class="btn-primary !px-3.5 !py-2" type="button">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.5 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/></svg>
+        <span class="hidden sm:inline">Upgrade to Pro</span><span class="sm:hidden">Pro</span>
+      </button>
+      <button id="themeToggle" class="btn-soft !p-2.5" type="button" aria-label="Toggle dark mode" title="Toggle theme">
+        <svg id="iconSun" class="icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg id="iconMoon" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Header Leaderboard Ad: 728x90 desktop / 320x50 mobile.
+     Replace the inner placeholder with your ad network code (e.g. AdSense <ins class="adsbygoogle">). -->
+<section aria-label="Advertisement" class="mx-auto mt-4 max-w-7xl px-4">
+  <div class="ad-slot hidden h-[90px] w-[728px] md:flex" data-ad="leaderboard-desktop"><span>Advertisement</span><span class="opacity-70">728 × 90</span></div>
+  <div class="ad-slot h-[50px] w-[320px] md:hidden" data-ad="leaderboard-mobile"><span>Advertisement · 320 × 50</span></div>
+</section>
+
+<!-- ===================== MAIN ===================== -->
+<main class="mx-auto max-w-7xl px-4 pb-10 pt-6">
+  <div class="mb-6 text-center">
+    <h1 class="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+      Free <span class="bg-gradient-to-r from-brand-500 via-fuchsia-500 to-accent-500 bg-clip-text text-transparent">Text to Speech</span> Reader
+    </h1>
+    <p class="mx-auto mt-3 max-w-2xl text-sm text-slate-600 dark:text-slate-300 sm:text-base">Turn any text into natural-sounding speech in seconds. Unlimited plays, private by design – everything runs in your browser.</p>
+  </div>
+
+  <div id="unsupported" class="mb-6 hidden rounded-xl border border-rose-400/40 bg-rose-500/10 p-4 text-sm text-rose-700 dark:text-rose-200">
+    Your browser doesn't support the Web Speech API. Please use a recent version of Chrome, Edge, Safari or Firefox.
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+
+    <!-- ============ WORKSPACE ============ -->
+    <section id="workspace" aria-label="Text to speech workspace" class="glass rounded-3xl p-4 sm:p-6">
+
+      <!-- Presets -->
+      <div class="mb-4">
+        <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Quick presets</p>
+        <div id="presets" class="flex flex-wrap gap-2"></div>
+      </div>
+
+      <!-- Text input -->
+      <label for="text" class="mb-2 block text-sm font-semibold">Your text</label>
+      <div class="relative">
+        <textarea id="text" rows="9" class="field resize-y !rounded-2xl !p-4 text-base leading-relaxed" placeholder="Type or paste your text here, then press Play… (Ctrl/⌘ + Enter)" spellcheck="true"></textarea>
+      </div>
+
+      <!-- Counter + meter -->
+      <div class="mt-3">
+        <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
+          <span><strong id="charCount" class="text-sm">0</strong> / <span id="limitLabel">2,000</span> characters · <strong id="wordCount">0</strong> words · ~<span id="durEst">0s</span></span>
+          <span id="limitMsg" class="font-medium text-slate-500 dark:text-slate-400">Free plan limit</span>
+        </div>
+        <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-300/50 dark:bg-white/10" role="progressbar" aria-label="Character limit usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="meterWrap">
+          <div id="meter" class="h-full w-0 rounded-full bg-gradient-to-r from-brand-500 to-accent-500 transition-all duration-300"></div>
+        </div>
+      </div>
+
+      <!-- Voice -->
+      <div class="mt-6 grid gap-4 sm:grid-cols-[1fr_170px]">
+        <div>
+          <label for="voice" class="mb-1.5 flex items-center justify-between text-sm font-semibold">
+            <span>Voice</span><span id="voiceBadge" class="rounded-full bg-brand-500/15 px-2 py-0.5 text-[11px] font-bold text-brand-600 dark:text-brand-400"></span>
+          </label>
+          <select id="voice" class="field" aria-label="Select voice"><option>Loading voices…</option></select>
+        </div>
+        <div>
+          <label for="accent" class="mb-1.5 block text-sm font-semibold">Accent</label>
+          <select id="accent" class="field" aria-label="Filter by accent"><option value="">All accents</option></select>
+        </div>
+      </div>
+
+      <!-- Sliders -->
+      <div class="mt-5 grid gap-5 sm:grid-cols-3">
+        <div>
+          <div class="mb-2 flex items-center justify-between text-sm font-semibold"><label for="rate">Speed</label><output id="rateVal" class="rounded-md bg-slate-900/5 px-2 py-0.5 font-mono text-xs dark:bg-white/10">1.00×</output></div>
+          <input id="rate" type="range" min="0.5" max="2" step="0.05" value="1">
+        </div>
+        <div>
+          <div class="mb-2 flex items-center justify-between text-sm font-semibold"><label for="pitch">Pitch</label><output id="pitchVal" class="rounded-md bg-slate-900/5 px-2 py-0.5 font-mono text-xs dark:bg-white/10">1.00</output></div>
+          <input id="pitch" type="range" min="0" max="2" step="0.05" value="1">
+        </div>
+        <div>
+          <div class="mb-2 flex items-center justify-between text-sm font-semibold"><label for="volume">Volume</label><output id="volVal" class="rounded-md bg-slate-900/5 px-2 py-0.5 font-mono text-xs dark:bg-white/10">100%</output></div>
+          <input id="volume" type="range" min="0" max="1" step="0.01" value="1">
+        </div>
+      </div>
+      <button id="resetSliders" type="button" class="mt-2 text-xs font-medium text-brand-600 hover:underline dark:text-brand-400">Reset sliders</button>
+
+      <!-- Visualizer -->
+      <div class="mt-5 rounded-2xl border border-slate-300/50 bg-white/40 p-3 dark:border-white/10 dark:bg-black/20">
+        <div class="flex items-center justify-between gap-3">
+          <div id="viz" class="viz" aria-hidden="true"></div>
+          <p id="status" class="text-right text-xs font-medium text-slate-600 dark:text-slate-300" aria-live="polite">Ready</p>
+        </div>
+        <div class="mt-2 h-1 overflow-hidden rounded-full bg-slate-300/50 dark:bg-white/10"><div id="progress" class="h-full w-0 rounded-full bg-gradient-to-r from-brand-500 to-accent-500 transition-all duration-300"></div></div>
+      </div>
+
+      <!-- Transport -->
+      <div class="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <button id="btnPlay" class="btn-primary" type="button">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Play
+        </button>
+        <button id="btnPause" class="btn-soft" type="button" disabled>
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>Pause
+        </button>
+        <button id="btnResume" class="btn-soft" type="button" disabled>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12a7 7 0 1 0 2.1-5"/><path d="M5 4v4h4"/></svg>Resume
+        </button>
+        <button id="btnStop" class="btn-danger" type="button" disabled>
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>Stop
+        </button>
+      </div>
+      <div class="mt-2 grid grid-cols-2 gap-2">
+        <button id="btnCopy" class="btn-soft" type="button">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy text
+        </button>
+        <button id="btnClear" class="btn-soft" type="button">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>Clear text
+        </button>
+      </div>
+
+      <!-- Native ad above Export -->
+      <aside class="mt-6 overflow-hidden rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-400/10 to-rose-400/10 p-4" aria-label="Sponsored" data-ad="native">
+        <div class="flex items-start gap-3">
+          <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-400/20 text-amber-600 dark:text-amber-300">
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M7 8v8M17 8v8M2 11v2M22 11v2"/></svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-300">Sponsored</p>
+            <p class="text-sm font-semibold">Want studio-quality AI voices for your videos?</p>
+            <p class="text-xs text-slate-600 dark:text-slate-300">Try premium ultra-realistic voices with commercial rights. <!-- Native ad slot: replace with your ad network's native unit --></p>
+          </div>
+          <a href="https://elevenlabs.io" target="_blank" rel="sponsored nofollow noopener noreferrer" class="btn-soft shrink-0 !px-3 !py-2 text-xs">Learn more</a>
+        </div>
+      </aside>
+
+      <!-- Export -->
+      <div class="mt-4 rounded-2xl border border-slate-300/50 bg-white/40 p-4 dark:border-white/10 dark:bg-black/20">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div class="sm:w-40">
+            <label for="fmt" class="mb-1.5 block text-sm font-semibold">Format</label>
+            <select id="fmt" class="field"><option value="wav">WAV (lossless)</option><option value="mp3">MP3 (128 kbps)</option></select>
+          </div>
+          <button id="btnExport" class="btn-primary flex-1" type="button">
+            <svg id="expIcon" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 20h16"/></svg>
+            <span id="expLabel">Export / Download Audio</span>
+          </button>
+        </div>
+        <p class="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+          Browsers don't expose raw audio from the built-in speech engine, so export records the speech as it plays. Click export, choose <strong>"This Tab"</strong> and enable <strong>"Share tab audio"</strong> in the prompt (desktop Chrome/Edge). Keep this tab open until it finishes.
+        </p>
+        <div id="exportResult" class="mt-3 hidden rounded-xl bg-emerald-500/10 p-3">
+          <p class="mb-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">Audio ready</p>
+          <audio id="exportAudio" controls class="mb-2 w-full"></audio>
+          <a id="exportLink" class="btn-soft w-full" download="voxflow.wav" href="#">Download file</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="space-y-6" aria-label="Sidebar">
+      <!-- Medium Rectangle Ad -->
+      <div class="glass rounded-3xl p-3">
+        <div class="ad-slot h-[250px] w-[300px] max-w-full" data-ad="sidebar-300x250"><span>Advertisement</span><span class="opacity-70">300 × 250</span></div>
+      </div>
+
+      <!-- History -->
+      <div class="glass rounded-3xl p-4 sm:p-5">
+        <div class="mb-3 flex items-center justify-between">
+          <h2 class="text-base font-bold">Recent history</h2>
+          <button id="clearHistory" type="button" class="text-xs font-medium text-rose-600 hover:underline dark:text-rose-300">Clear all</button>
+        </div>
+        <ul id="history" class="scroll-thin max-h-[420px] space-y-2 overflow-y-auto pr-1"></ul>
+        <p id="historyEmpty" class="rounded-xl border border-dashed border-slate-300/70 p-4 text-center text-xs text-slate-500 dark:border-white/15 dark:text-slate-400">Nothing yet. Snippets you play appear here and are saved only on this device.</p>
+      </div>
+
+      <!-- Pro teaser -->
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 via-fuchsia-600 to-accent-500 p-5 text-white shadow-xl shadow-brand-600/30">
+        <div class="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/20 blur-2xl"></div>
+        <h2 class="relative text-lg font-extrabold">Go Pro</h2>
+        <p class="relative mt-1 text-sm text-white/90">Unlimited characters, ultra-realistic AI voices and a commercial license.</p>
+        <button id="btnUpgradeSide" type="button" class="relative mt-4 w-full rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-brand-600 transition hover:scale-[1.02] active:scale-95">Compare plans</button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ===================== SEO CONTENT ===================== -->
+  <section id="features" class="mt-14" aria-labelledby="featuresTitle">
+    <h2 id="featuresTitle" class="text-center text-2xl font-extrabold tracking-tight sm:text-3xl">Why use this free text to speech tool?</h2>
+    <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <article class="glass rounded-2xl p-5"><h3 class="font-bold">100% free &amp; unlimited</h3><p class="mt-2 text-sm text-slate-600 dark:text-slate-300">No sign-up, no daily quota on plays. Convert as many scripts as you like.</p></article>
+      <article class="glass rounded-2xl p-5"><h3 class="font-bold">Private by design</h3><p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Speech is generated by your device. Your text is never uploaded to our servers.</p></article>
+      <article class="glass rounded-2xl p-5"><h3 class="font-bold">Voices &amp; accents</h3><p class="mt-2 text-sm text-slate-600 dark:text-slate-300">US, UK, Australian, Canadian, Indian English and many more languages, depending on your system.</p></article>
+      <article class="glass rounded-2xl p-5"><h3 class="font-bold">Full control</h3><p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Fine-tune speed, pitch and volume. Perfect for videos, studying, proofreading and accessibility.</p></article>
+    </div>
+  </section>
+
+  <section id="faq" class="mx-auto mt-12 max-w-3xl" aria-labelledby="faqTitle">
+    <h2 id="faqTitle" class="text-center text-2xl font-extrabold tracking-tight sm:text-3xl">Frequently asked questions</h2>
+    <div class="mt-6 space-y-3">
+      <details class="glass group rounded-2xl p-4"><summary class="flex cursor-pointer items-center justify-between font-semibold">Is this text to speech tool really free?<svg class="chev icon transition" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></summary><p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Yes. The free plan lets you play unlimited text, up to 2,000 characters at a time, using the voices installed on your device.</p></details>
+      <details class="glass group rounded-2xl p-4"><summary class="flex cursor-pointer items-center justify-between font-semibold">Why do the voices differ between devices?<svg class="chev icon transition" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></summary><p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Voices come from your operating system and browser (for example Windows, macOS, Android or Chrome's online voices), so the list and quality vary.</p></details>
+      <details class="glass group rounded-2xl p-4"><summary class="flex cursor-pointer items-center justify-between font-semibold">How does audio export work?<svg class="chev icon transition" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></summary><p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Browsers can't hand over the raw audio of built-in voices, so export records this tab's audio while the text plays, trims silence, then converts it to WAV or MP3. It works best on desktop Chrome or Edge.</p></details>
+      <details class="glass group rounded-2xl p-4"><summary class="flex cursor-pointer items-center justify-between font-semibold">Can I use the audio commercially?<svg class="chev icon transition" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></summary><p class="mt-2 text-sm text-slate-600 dark:text-slate-300">System voices may carry their own licenses. For guaranteed commercial rights, choose the Pro plan with AI voices.</p></details>
+    </div>
+  </section>
+</main>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="glass !rounded-none !border-x-0 !border-b-0" role="contentinfo">
+  <div class="mx-auto max-w-7xl px-4 py-10">
+    <!-- Affiliate banners (replace hrefs with your affiliate links) -->
+    <div class="mb-8 grid gap-4 sm:grid-cols-2">
+      <a href="https://elevenlabs.io" target="_blank" rel="sponsored nofollow noopener noreferrer" class="group flex items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-700 p-5 text-white transition hover:-translate-y-0.5 hover:shadow-xl" data-ad="affiliate-elevenlabs">
+        <div><p class="text-[10px] font-bold uppercase tracking-widest text-amber-300">Sponsored</p><p class="text-lg font-extrabold">ElevenLabs</p><p class="text-xs text-slate-300">Ultra-realistic AI voices &amp; voice cloning</p></div>
+        <span class="rounded-lg bg-white/15 px-3 py-1.5 text-xs font-semibold group-hover:bg-white/25">Try it →</span>
+      </a>
+      <a href="https://murf.ai" target="_blank" rel="sponsored nofollow noopener noreferrer" class="group flex items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-fuchsia-600 to-brand-600 p-5 text-white transition hover:-translate-y-0.5 hover:shadow-xl" data-ad="affiliate-murf">
+        <div><p class="text-[10px] font-bold uppercase tracking-widest text-amber-200">Sponsored</p><p class="text-lg font-extrabold">Murf AI</p><p class="text-xs text-white/80">Studio voiceovers for teams &amp; creators</p></div>
+        <span class="rounded-lg bg-white/20 px-3 py-1.5 text-xs font-semibold group-hover:bg-white/30">Try it →</span>
+      </a>
+    </div>
+
+    <div class="flex flex-col items-center justify-between gap-4 border-t border-slate-300/50 pt-6 text-sm dark:border-white/10 md:flex-row">
+      <p class="text-slate-600 dark:text-slate-300">© <span id="year"></span> VoxFlow. Free online text to speech converter.</p>
+      <nav aria-label="Footer" class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 font-medium">
+        <a href="#privacy" data-info="privacy" class="hover:text-brand-500">Privacy Policy</a>
+        <a href="#terms" data-info="terms" class="hover:text-brand-500">Terms of Service</a>
+        <a href="#contact" data-info="contact" class="hover:text-brand-500">Contact Us</a>
+      </nav>
+    </div>
+    <p class="mt-4 text-center text-[11px] text-slate-500 dark:text-slate-400">Affiliate disclosure: some links above are sponsored and may earn us a commission at no cost to you. Free text to speech · online voice generator · text reader · TTS to WAV &amp; MP3.</p>
+  </div>
+</footer>
+
+<!-- ===================== PRO MODAL ===================== -->
+<div id="proModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="proTitle">
+  <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" data-close></div>
+  <div class="modal-panel glass relative max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white p-5 dark:!bg-slate-900/90 sm:p-8" style="background:rgba(255,255,255,.92)">
+    <button type="button" data-close class="btn-soft absolute right-3 top-3 !p-2" aria-label="Close"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <div class="text-center">
+      <span class="rounded-full bg-brand-500/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">VoxFlow Pro</span>
+      <h2 id="proTitle" class="mt-3 text-2xl font-extrabold sm:text-3xl">Unlock studio-grade voices</h2>
+      <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Everything in Free, plus the tools creators and businesses need.</p>
+    </div>
+    <div class="mt-6 grid gap-4 md:grid-cols-2">
+      <div class="rounded-2xl border border-slate-300/60 p-5 dark:border-white/15">
+        <h3 class="text-lg font-bold">Free</h3><p class="text-3xl font-extrabold">$0<span class="text-sm font-medium text-slate-500"> /forever</span></p>
+        <ul class="mt-4 space-y-2 text-sm">
+          <li class="flex gap-2"><span class="text-emerald-500">✔</span> 2,000 characters per conversion</li>
+          <li class="flex gap-2"><span class="text-emerald-500">✔</span> System voices &amp; accents</li>
+          <li class="flex gap-2"><span class="text-emerald-500">✔</span> Speed, pitch &amp; volume controls</li>
+          <li class="flex gap-2"><span class="text-emerald-500">✔</span> WAV / MP3 export via tab recording</li>
+          <li class="flex gap-2 text-slate-400"><span>✖</span> Ultra-realistic AI voices</li>
+          <li class="flex gap-2 text-slate-400"><span>✖</span> Commercial license</li>
+          <li class="flex gap-2 text-slate-400"><span>✖</span> Ad-free experience</li>
+        </ul>
+        <button type="button" data-close class="btn-soft mt-5 w-full">Continue with Free</button>
+      </div>
+      <div class="relative rounded-2xl border-2 border-brand-500 bg-gradient-to-br from-brand-500/10 to-accent-500/10 p-5 shadow-xl shadow-brand-500/20">
+        <span class="absolute -top-3 right-4 rounded-full bg-gradient-to-r from-brand-500 to-accent-500 px-3 py-1 text-[11px] font-bold uppercase text-white">Most popular</span>
+        <h3 class="text-lg font-bold">Pro</h3><p class="text-3xl font-extrabold">$9<span class="text-sm font-medium text-slate-500"> /month</span></p>
+        <ul class="mt-4 space-y-2 text-sm">
+          <li class="flex gap-2"><span class="text-emerald-500">✔</span> <strong>Unlimited</strong> characters</li>
+          <li class="flex gap-2"><span class="text-emerald-500">✔</span> AI ultra-realistic voices</li>
+          <li class="flex gap-2"><span class="text-emerald-500">✔</span> Direct high-quality MP3/WAV downloads</li>
+          <li class="flex gap-2"><span class="text-emerald-500">✔</span> Commercial license</li>
+          <li class="flex gap-2"><span class="text-emerald-500">✔</span> No ads</li>
+          <li class="flex gap-2"><span class="text-emerald-500">✔</span> Priority support</li>
+        </ul>
+        <button id="btnProCta" type="button" class="btn-primary mt-5 w-full">Upgrade to Pro</button>
+      </div>
+    </div>
+    <p class="mt-4 text-center text-[11px] text-slate-500">Pricing shown is a placeholder. Set CONFIG.PRO_URL in the script to your checkout link.</p>
+  </div>
+</div>
+
+<!-- ===================== INFO MODAL (Privacy/Terms/Contact) ===================== -->
+<div id="infoModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+  <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" data-close></div>
+  <div class="modal-panel relative max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-white/20 bg-white p-6 shadow-2xl dark:bg-slate-900">
+    <button type="button" data-close class="btn-soft absolute right-3 top-3 !p-2" aria-label="Close"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <h2 id="infoTitle" class="pr-10 text-xl font-extrabold"></h2>
+    <div id="infoBody" class="mt-3 space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"></div>
+  </div>
+</div>
+
+<!-- Toasts -->
+<div id="toasts" class="pointer-events-none fixed inset-x-0 bottom-4 z-[60] flex flex-col items-center gap-2 px-4" aria-live="polite" aria-atomic="false"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============ CONFIG ============ */
+  const CONFIG = {
+    FREE_LIMIT: 2000,
+    HISTORY_MAX: 15,
+    PRO_URL: '',                       // e.g. 'https://your-store.com/checkout'
+    CONTACT_EMAIL: 'hello@example.com' // replace with your address
+  };
+
+  /* ============ HELPERS ============ */
+  const $ = (id) => document.getElementById(id);
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const fmtNum = (n) => n.toLocaleString('en-US');
+
+  /* ============ ELEMENTS ============ */
+  const el = {
+    text: $('text'), charCount: $('charCount'), wordCount: $('wordCount'), durEst: $('durEst'), limitMsg: $('limitMsg'),
+    limitLabel: $('limitLabel'), meter: $('meter'), meterWrap: $('meterWrap'),
+    voice: $('voice'), accent: $('accent'), voiceBadge: $('voiceBadge'),
+    rate: $('rate'), pitch: $('pitch'), volume: $('volume'), rateVal: $('rateVal'), pitchVal: $('pitchVal'), volVal: $('volVal'),
+    viz: $('viz'), status: $('status'), progress: $('progress'),
+    play: $('btnPlay'), pause: $('btnPause'), resume: $('btnResume'), stop: $('btnStop'), copy: $('btnCopy'), clear: $('btnClear'),
+    fmt: $('fmt'), exp: $('btnExport'), expLabel: $('expLabel'), expIcon: $('expIcon'),
+    exportResult: $('exportResult'), exportAudio: $('exportAudio'), exportLink: $('exportLink'),
+    history: $('history'), historyEmpty: $('historyEmpty'), clearHistory: $('clearHistory'),
+    presets: $('presets'), toasts: $('toasts')
+  };
+  el.limitLabel.textContent = fmtNum(CONFIG.FREE_LIMIT);
+  $('year').textContent = new Date().getFullYear();
+
+  /* ============ TOASTS ============ */
+  const TOAST_STYLE = {
+    success: 'border-emerald-400/40 bg-emerald-500/90 text-white',
+    info: 'border-brand-400/40 bg-slate-900/90 text-white',
+    warn: 'border-amber-400/50 bg-amber-500/95 text-slate-900',
+    error: 'border-rose-400/40 bg-rose-600/95 text-white'
+  };
+  function toast(msg, type, ms) {
+    type = type || 'info'; ms = ms || 3000;
+    const t = document.createElement('div');
+    t.className = 'toast pointer-events-auto max-w-md rounded-xl border px-4 py-2.5 text-sm font-medium shadow-xl backdrop-blur ' + (TOAST_STYLE[type] || TOAST_STYLE.info);
+    t.setAttribute('role', 'status');
+    t.textContent = msg;
+    el.toasts.appendChild(t);
+    while (el.toasts.children.length > 3) el.toasts.firstChild.remove();
+    setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 260); }, ms);
+  }
+
+  /* ============ THEME ============ */
+  function applyThemeIcons() {
+    const dark = document.documentElement.classList.contains('dark');
+    $('iconSun').classList.toggle('hidden', !dark);
+    $('iconMoon').classList.toggle('hidden', dark);
+    const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = dark ? '#0b1020' : '#eef2ff';
+  }
+  $('themeToggle').addEventListener('click', () => {
+    const dark = document.documentElement.classList.toggle('dark');
+    store.set('vf-theme', dark ? 'dark' : 'light');
+    applyThemeIcons();
+  });
+  applyThemeIcons();
+
+  /* ============ MODALS ============ */
+  let lastFocus = null;
+  function openModal(m) {
+    lastFocus = document.activeElement;
+    m.classList.remove('hidden'); m.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    const f = m.querySelector('button:not([data-close-bg])'); if (f) f.focus();
+  }
+  function closeModals() {
+    document.querySelectorAll('#proModal,#infoModal').forEach((m) => { m.classList.add('hidden'); m.classList.remove('flex'); });
+    document.body.style.overflow = '';
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  document.querySelectorAll('[data-close]').forEach((n) => n.addEventListener('click', closeModals));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModals(); });
+  const openPro = () => openModal($('proModal'));
+  $('btnUpgradeTop').addEventListener('click', openPro);
+  $('btnUpgradeSide').addEventListener('click', openPro);
+  $('btnProCta').addEventListener('click', () => {
+    if (CONFIG.PRO_URL) window.open(CONFIG.PRO_URL, '_blank', 'noopener');
+    else toast('Connect your checkout link in CONFIG.PRO_URL to enable upgrades.', 'info', 4000);
+  });
+
+  const INFO = {
+    privacy: ['Privacy Policy', [
+      'Text you enter is converted to speech by your own browser and device. We do not send your text to any server.',
+      'Your settings and recent history are stored in your browser\'s local storage on this device only, and you can clear them any time using "Clear all".',
+      'Third-party advertising and affiliate partners may use cookies according to their own policies. Replace this template with your full policy before launch.'
+    ]],
+    terms: ['Terms of Service', [
+      'This tool is provided "as is" without warranties. You are responsible for the content you convert and for having the right to use it.',
+      'System voices may have their own license terms; for commercial use, check your voice provider or choose a plan that includes a commercial license.',
+      'Replace this template with your full Terms of Service before launch.'
+    ]],
+    contact: ['Contact Us', [
+      'Questions, feedback, or advertising enquiries? Email us at:',
+      'mailto'
+    ]]
+  };
+  document.querySelectorAll('[data-info]').forEach((a) => a.addEventListener('click', (e) => {
+    e.preventDefault();
+    const d = INFO[a.dataset.info];
+    $('infoTitle').textContent = d[0];
+    const body = $('infoBody'); body.textContent = '';
+    d[1].forEach((p) => {
+      const n = document.createElement('p');
+      if (p === 'mailto') {
+        const l = document.createElement('a'); l.href = 'mailto:' + CONFIG.CONTACT_EMAIL; l.textContent = CONFIG.CONTACT_EMAIL;
+        l.className = 'font-semibold text-brand-600 underline dark:text-brand-400'; n.appendChild(l);
+      } else n.textContent = p;
+      body.appendChild(n);
+    });
+    openModal($('infoModal'));
+  }));
+
+  /* ============ FEATURE SUPPORT ============ */
+  const synth = window.speechSynthesis;
+  const supported = !!(synth && window.SpeechSynthesisUtterance);
+  if (!supported) {
+    $('unsupported').classList.remove('hidden');
+    [el.play, el.exp].forEach((b) => (b.disabled = true));
+  }
+
+  /* ============ VISUALIZER ============ */
+  for (let i = 0; i < 28; i++) {
+    const b = document.createElement('i');
+    b.style.animationDelay = (-Math.random() * 0.9).toFixed(2) + 's';
+    b.style.animationDuration = (0.55 + Math.random() * 0.7).toFixed(2) + 's';
+    el.viz.appendChild(b);
+  }
+
+  /* ============ SLIDERS ============ */
+  function paintRange(r) {
+    const p = ((r.value - r.min) / (r.max - r.min)) * 100;
+    r.style.setProperty('--p', p + '%');
+  }
+  function updateSliders() {
+    el.rateVal.textContent = Number(el.rate.value).toFixed(2) + '×';
+    el.pitchVal.textContent = Number(el.pitch.value).toFixed(2);
+    el.volVal.textContent = Math.round(el.volume.value * 100) + '%';
+    [el.rate, el.pitch, el.volume].forEach(paintRange);
+    updateCounter();
+  }
+  [el.rate, el.pitch, el.volume].forEach((r) => {
+    const k = 'vf-' + r.id;
+    const saved = store.get(k, null); if (saved !== null) r.value = saved;
+    r.addEventListener('input', () => { store.set(k, r.value); updateSliders(); });
+  });
+  $('resetSliders').addEventListener('click', () => {
+    el.rate.value = 1; el.pitch.value = 1; el.volume.value = 1;
+    [el.rate, el.pitch, el.volume].forEach((r) => store.set('vf-' + r.id, r.value));
+    updateSliders(); toast('Sliders reset', 'info');
+  });
+
+  /* ============ COUNTER / METER ============ */
+  function updateCounter() {
+    const t = el.text.value;
+    const chars = t.length;
+    const words = (t.trim().match(/\S+/g) || []).length;
+    const secs = Math.round((words / (160 * Number(el.rate.value))) * 60);
+    el.charCount.textContent = fmtNum(chars);
+    el.wordCount.textContent = fmtNum(words);
+    el.durEst.textContent = secs >= 60 ? Math.floor(secs / 60) + 'm ' + (secs % 60) + 's' : secs + 's';
+    const pct = Math.min(100, (chars / CONFIG.FREE_LIMIT) * 100);
+    el.meter.style.width = pct + '%';
+    el.meterWrap.setAttribute('aria-valuenow', String(Math.round(pct)));
+    el.meter.className = 'h-full rounded-full transition-all duration-300 ' +
+      (pct >= 100 ? 'bg-rose-500' : pct >= 80 ? 'bg-amber-500' : 'bg-gradient-to-r from-brand-500 to-accent-500');
+    if (pct >= 100) {
+      el.limitMsg.innerHTML = '';
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'font-bold text-rose-600 underline dark:text-rose-300';
+      b.textContent = 'Limit reached – go Pro for unlimited'; b.addEventListener('click', openPro); el.limitMsg.appendChild(b);
+    } else if (pct >= 80) {
+      el.limitMsg.textContent = 'Approaching the free limit'; el.limitMsg.className = 'font-semibold text-amber-600 dark:text-amber-300';
+    } else {
+      el.limitMsg.textContent = 'Free plan limit'; el.limitMsg.className = 'font-medium text-slate-500 dark:text-slate-400';
+    }
+  }
+  let limitWarned = false;
+  el.text.addEventListener('input', () => {
+    if (el.text.value.length > CONFIG.FREE_LIMIT) {
+      el.text.value = el.text.value.slice(0, CONFIG.FREE_LIMIT);
+      if (!limitWarned) { toast('Free limit of ' + fmtNum(CONFIG.FREE_LIMIT) + ' characters reached. Text was trimmed.', 'warn', 4000); limitWarned = true; setTimeout(() => (limitWarned = false), 4000); }
+    }
+    updateCounter();
+    store.set('vf-draft', el.text.value);
+  });
+
+  /* ============ VOICES ============ */
+  let voices = [];
+  let voicesToastShown = false;
+  let langNames = null;
+  try { langNames = new Intl.DisplayNames(['en'], { type: 'language' }); } catch (e) {}
+
+  function regionTag(lang) {
+    const parts = (lang || '').replace('_', '-').split('-');
+    let r = (parts[1] || parts[0] || '').toUpperCase();
+    if (r === 'GB') r = 'UK';
+    return r || 'N/A';
+  }
+  function langLabel(lang) {
+    try { return (langNames && langNames.of(lang.replace('_', '-'))) || lang; } catch (e) { return lang; }
+  }
+  function loadVoices() {
+    if (!supported) return false;
+    const list = synth.getVoices();
+    if (!list || !list.length) return false;
+    voices = Array.prototype.slice.call(list);
+
+    // Accent filter
+    const prevAccent = el.accent.value;
+    const tags = Array.from(new Set(voices.map((v) => regionTag(v.lang)))).sort();
+    el.accent.innerHTML = '<option value="">All accents</option>';
+    tags.forEach((t) => { const o = document.createElement('option'); o.value = t; o.textContent = t; el.accent.appendChild(o); });
+    if (tags.includes(prevAccent)) el.accent.value = prevAccent;
+
+    renderVoiceOptions(true);
+    if (!voicesToastShown) { toast('Voice loaded · ' + voices.length + ' voices available', 'success'); voicesToastShown = true; }
+    return true;
+  }
+  function renderVoiceOptions(restore) {
+    const prevURI = restore ? store.get('vf-voice', '') : (voices[el.voice.value] || {}).voiceURI;
+    const filter = el.accent.value;
+    const order = voices.map((v, i) => ({ v, i })).filter((o) => !filter || regionTag(o.v.lang) === filter);
+    order.sort((a, b) => {
+      const ae = a.v.lang.toLowerCase().startsWith('en') ? 0 : 1, be = b.v.lang.toLowerCase().startsWith('en') ? 0 : 1;
+      return ae - be || a.v.lang.localeCompare(b.v.lang) || a.v.name.localeCompare(b.v.name);
+    });
+    el.voice.innerHTML = '';
+    const groups = {};
+    order.forEach(({ v, i }) => {
+      const g = langLabel(v.lang);
+      if (!groups[g]) { groups[g] = document.createElement('optgroup'); groups[g].label = g; el.voice.appendChild(groups[g]); }
+      const o = document.createElement('option');
+      o.value = i; o.textContent = '[' + regionTag(v.lang) + '] ' + v.name + (v.localService ? '' : ' (online)');
+      groups[g].appendChild(o);
+    });
+    if (!order.length) { el.voice.innerHTML = '<option>No voices for this accent</option>'; return; }
+    let pick = order.find((o) => o.v.voiceURI === prevURI);
+    if (!pick) pick = order.find((o) => o.v.default && o.v.lang.toLowerCase().startsWith('en')) || order.find((o) => o.v.lang === 'en-US') || order[0];
+    el.voice.value = pick.i;
+    updateVoiceBadge();
+  }
+  function updateVoiceBadge() {
+    const v = voices[el.voice.value];
+    el.voiceBadge.textContent = v ? regionTag(v.lang) + ' · ' + v.lang : '';
+  }
+  el.voice.addEventListener('change', () => {
+    const v = voices[el.voice.value]; if (v) store.set('vf-voice', v.voiceURI);
+    updateVoiceBadge();
+  });
+  el.accent.addEventListener('change', () => renderVoiceOptions(false));
+  if (supported) {
+    loadVoices();
+    synth.onvoiceschanged = loadVoices; // Chrome loads asynchronously
+    let tries = 0;
+    const poll = setInterval(() => { if (voices.length || ++tries > 20) clearInterval(poll); else loadVoices(); }, 250);
+  }
+  const currentVoice = () => voices[el.voice.value] || null;
+
+  /* ============ TEXT CHUNKING (avoids Chrome's ~15s cut-off) ============ */
+  function splitText(t) {
+    const clean = t.replace(/\r/g, '').replace(/[ \t]+/g, ' ').trim();
+    const parts = clean.match(/[^.!?…\n]+(?:[.!?…]+["')\]]*|$)\s*|\n+/g) || [clean];
+    const out = []; let buf = ''; const MAX = 190;
+    const push = (s) => { if (s && s.trim()) out.push(s.trim()); };
+    for (const p of parts) {
+      if (p.length > MAX) {
+        if (buf) { push(buf); buf = ''; }
+        let line = '';
+        for (const w of p.split(/\s+/)) {
+          if ((line + ' ' + w).length > MAX) { push(line); line = w; } else line = line ? line + ' ' + w : w;
+        }
+        push(line);
+      } else if ((buf + p).length > MAX) { push(buf); buf = p; } else buf += p;
+    }
+    push(buf);
+    return out;
+  }
+
+  /* ============ SPEECH ENGINE ============ */
+  let session = 0, state = 'idle', onDone = null, keepAlive = null;
+
+  function setState(s, label) {
+    state = s;
+    const speaking = s === 'speaking', paused = s === 'paused';
+    el.play.disabled = !supported || speaking || paused || exporting;
+    el.pause.disabled = !speaking;
+    el.resume.disabled = !paused;
+    el.stop.disabled = !(speaking || paused);
+    el.viz.classList.toggle('on', speaking || paused);
+    el.viz.classList.toggle('paused', paused);
+    el.status.textContent = label || (speaking ? 'Speaking…' : paused ? 'Paused' : 'Ready');
+  }
+  function setProgress(f) { el.progress.style.width = Math.round(Math.max(0, Math.min(1, f)) * 100) + '%'; }
+
+  function speak(text, cb) {
+    if (!supported) return;
+    text = (text || '').trim();
+    if (!text) { toast('Please enter some text first', 'warn'); if (cb) cb(false); return; }
+    const sid = ++session;
+    synth.cancel();
+    const chunks = splitText(text);
+    let i = 0;
+    onDone = cb || null;
+    setState('speaking'); setProgress(0.02);
+
+    function finish(ok) {
+      if (sid !== session) return;
+      setState('idle', ok ? 'Finished' : 'Ready'); setProgress(ok ? 1 : 0);
+      setTimeout(() => { if (state === 'idle') setProgress(0); }, 900);
+      const f = onDone; onDone = null; if (f) f(ok);
+    }
+    function next() {
+      if (sid !== session) return;
+      if (i >= chunks.length) return finish(true);
+      const u = new SpeechSynthesisUtterance(chunks[i]);
+      const v = currentVoice();
+      if (v) { u.voice = v; u.lang = v.lang; }
+      u.rate = Number(el.rate.value); u.pitch = Number(el.pitch.value); u.volume = Number(el.volume.value);
+      u.onend = () => { if (sid !== session) return; i++; setProgress(i / chunks.length); next(); };
+      u.onerror = (e) => {
+        if (sid !== session) return;
+        if (e.error === 'interrupted' || e.error === 'canceled') return;
+        toast('Speech error: ' + (e.error || 'unknown'), 'error'); finish(false);
+      };
+      window.__vfUtter = u; // keep reference: prevents GC bug in some browsers
+      synth.speak(u);
+    }
+    setTimeout(() => { if (sid === session) next(); }, 80);
+  }
+  function stopSpeech() {
+    if (!supported) return;
+    session++;
+    synth.cancel();
+    setState('idle'); setProgress(0);
+    const f = onDone; onDone = null; if (f) f(false);
+  }
+
+  /* ============ HISTORY ============ */
+  let history = [];
+  try { history = JSON.parse(store.get('vf-history', '[]')) || []; } catch (e) { history = []; }
+  function saveHistory() { store.set('vf-history', JSON.stringify(history.slice(0, CONFIG.HISTORY_MAX))); }
+  function addHistory(text) {
+    const v = currentVoice();
+    const entry = {
+      id: Date.now().toString(36), text: text, ts: Date.now(),
+      voiceURI: v ? v.voiceURI : '', voiceName: v ? v.name : 'Default',
+      rate: Number(el.rate.value), pitch: Number(el.pitch.value), volume: Number(el.volume.value)
+    };
+    history = history.filter((h) => !(h.text === entry.text && h.voiceURI === entry.voiceURI));
+    history.unshift(entry);
+    history = history.slice(0, CONFIG.HISTORY_MAX);
+    saveHistory(); renderHistory();
+  }
+  function applyEntry(h) {
+    el.text.value = h.text.slice(0, CONFIG.FREE_LIMIT);
+    el.rate.value = h.rate; el.pitch.value = h.pitch; el.volume.value = h.volume;
+    const idx = voices.findIndex((v) => v.voiceURI === h.voiceURI);
+    if (idx >= 0) {
+      if (el.accent.value && regionTag(voices[idx].lang) !== el.accent.value) el.accent.value = '';
+      renderVoiceOptions(false); el.voice.value = idx; updateVoiceBadge();
+    }
+    updateSliders(); updateCounter();
+  }
+  function timeAgo(ts) {
+    const s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + ' min ago';
+    if (s < 86400) return Math.floor(s / 3600) + ' h ago'; return Math.floor(s / 86400) + ' d ago';
+  }
+  function renderHistory() {
+    el.history.textContent = '';
+    el.historyEmpty.classList.toggle('hidden', history.length > 0);
+    history.forEach((h) => {
+      const li = document.createElement('li');
+      li.className = 'rounded-xl border border-slate-300/50 bg-white/50 p-3 dark:border-white/10 dark:bg-white/5';
+      const p = document.createElement('p'); p.className = 'line-clamp-2 break-words text-sm'; p.textContent = h.text;
+      p.style.cssText = 'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden';
+      const meta = document.createElement('p'); meta.className = 'mt-1 truncate text-[11px] text-slate-500 dark:text-slate-400';
+      meta.textContent = h.voiceName + ' · ' + h.rate.toFixed(2) + '× · ' + timeAgo(h.ts);
+      const row = document.createElement('div'); row.className = 'mt-2 flex gap-2';
+      const mk = (label, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = cls + ' !px-3 !py-1.5 text-xs'; b.textContent = label; b.addEventListener('click', fn); return b; };
+      row.appendChild(mk('▶ Play', 'btn-primary', () => { applyEntry(h); speak(h.text); history = history.filter((x) => x.id !== h.id); history.unshift(Object.assign({}, h, { ts: Date.now() })); saveHistory(); renderHistory(); }));
+      row.appendChild(mk('Reuse', 'btn-soft', () => { applyEntry(h); toast('Loaded into editor', 'info'); window.scrollTo({ top: 0, behavior: 'smooth' }); }));
+      row.appendChild(mk('✕', 'btn-danger', () => { history = history.filter((x) => x.id !== h.id); saveHistory(); renderHistory(); }));
+      li.append(p, meta, row); el.history.appendChild(li);
+    });
+  }
+  el.clearHistory.addEventListener('click', () => {
+    if (!history.length) return;
+    history = []; saveHistory(); renderHistory(); toast('History cleared', 'info');
+  });
+  renderHistory();
+
+  /* ============ BUTTON ACTIONS ============ */
+  function playFromEditor() {
+    const t = el.text.value.trim();
+    if (!t) { toast('Please enter some text first', 'warn'); el.text.focus(); return; }
+    addHistory(t);
+    speak(t);
+  }
+  el.play.addEventListener('click', playFromEditor);
+  el.pause.addEventListener('click', () => { if (state === 'speaking') { synth.pause(); setState('paused'); } });
+  el.resume.addEventListener('click', () => { if (state === 'paused') { synth.resume(); setState('speaking'); } });
+  el.stop.addEventListener('click', stopSpeech);
+  el.clear.addEventListener('click', () => {
+    if (!el.text.value) return;
+    el.text.value = ''; store.set('vf-draft', ''); updateCounter(); el.text.focus(); toast('Text cleared', 'info');
+  });
+  el.copy.addEventListener('click', async () => {
+    const t = el.text.value;
+    if (!t) { toast('Nothing to copy', 'warn'); return; }
+    try { await navigator.clipboard.writeText(t); }
+    catch (e) { el.text.select(); try { document.execCommand('copy'); } catch (_) {} el.text.setSelectionRange(t.length, t.length); }
+    toast('Copied to clipboard', 'success');
+  });
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); if (!el.play.disabled) playFromEditor(); }
+  });
+  window.addEventListener('beforeunload', () => { if (supported) synth.cancel(); });
+
+  /* ============ PRESETS ============ */
+  const PRESETS = [
+    { label: '🎬 YouTube Intro', text: "What's up everyone, and welcome back to the channel! If you're new here, my name is Alex, and on this channel we break down the latest in tech, creativity, and productivity, so you can work smarter and live better. In today's video, I'm going to show you three simple tricks that completely changed my workflow. Stick around until the end, because the last one is a total game changer. Before we dive in, smash that like button and subscribe so you never miss an upload. Alright, let's get started!" },
+    { label: '💼 Sales Pitch', text: "Imagine cutting your reporting time in half, without hiring anyone new. That's exactly what our platform does for busy teams like yours. In just five minutes, you can connect your tools, automate your weekly reports, and get clear insights delivered straight to your inbox. More than ten thousand companies already trust us to save time and grow faster. Today only, you can start your free thirty day trial, no credit card required. Don't wait. Join us now and see the difference for yourself." },
+    { label: '📖 Storytelling', text: "The old lighthouse stood alone at the edge of the world, its lamp glowing against the gathering storm. Mara pulled her coat tighter and climbed the spiral stairs, each step echoing like a heartbeat. Somewhere out in the dark, a ship was lost, and she was the only one who could guide it home. The wind howled. The sea roared. But Mara lit the great flame, and for the first time in a hundred years, the light reached all the way to the horizon." },
+    { label: '📱 Tech Review', text: "After two weeks of daily use, here's my honest take on this phone. The display is stunning, bright, sharp, and incredibly smooth at one hundred and twenty hertz. Performance is excellent, handling games and multitasking without a single stutter. Battery life easily lasts a full day and a half. The camera is great in daylight, but struggles a little in very low light. At this price, it's one of the best values on the market, and I can easily recommend it. Final score: eight point five out of ten." },
+    { label: '🎙️ Podcast Opener', text: "Hello and welcome to the Curious Minds podcast, the show where we explore big ideas in small, easy-to-digest conversations. I'm your host, and today we're diving into a question that has fascinated people for centuries: why do we dream? Grab your coffee, get comfortable, and let's find out together." },
+    { label: '📢 Announcement', text: "Attention please. This is a friendly reminder that the main entrance will be closed for maintenance from nine a.m. to noon tomorrow. Please use the side entrance on the east side of the building. We apologize for any inconvenience and thank you for your patience and cooperation." }
+  ];
+  PRESETS.forEach((p) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = p.label;
+    b.addEventListener('click', () => {
+      el.text.value = p.text.slice(0, CONFIG.FREE_LIMIT);
+      store.set('vf-draft', el.text.value); updateCounter(); el.text.focus();
+      toast('Preset loaded: ' + p.label.replace(/^\S+\s/, ''), 'success');
+    });
+    el.presets.appendChild(b);
+  });
+
+  /* ============ AUDIO EXPORT (tab-capture → WAV / MP3) ============ */
+  let exporting = false, lastURL = null;
+
+  function setExporting(on, label) {
+    exporting = on;
+    el.exp.disabled = on || !supported;
+    el.expLabel.textContent = on ? (label || 'Recording…') : 'Export / Download Audio';
+    el.expIcon.classList.toggle('spin', on);
+    if (!on && state === 'idle') el.play.disabled = !supported;
+    if (on) el.play.disabled = true;
+  }
+  function toMono(ab) {
+    const n = ab.length, ch = ab.numberOfChannels, out = new Float32Array(n);
+    for (let c = 0; c < ch; c++) { const d = ab.getChannelData(c); for (let i = 0; i < n; i++) out[i] += d[i] / ch; }
+    return out;
+  }
+  function trimSilence(f, sr) {
+    const th = 0.008; let s = 0, e = f.length - 1;
+    while (s < e && Math.abs(f[s]) < th) s++;
+    while (e > s && Math.abs(f[e]) < th) e--;
+    const pad = Math.floor(sr * 0.12);
+    return f.subarray(Math.max(0, s - pad), Math.min(f.length, e + pad));
+  }
+  function toInt16(f) {
+    const o = new Int16Array(f.length);
+    for (let i = 0; i < f.length; i++) { const v = Math.max(-1, Math.min(1, f[i])); o[i] = v < 0 ? v * 0x8000 : v * 0x7fff; }
+    return o;
+  }
+  function wavBlob(i16, sr) {
+    const buf = new ArrayBuffer(44 + i16.length * 2), dv = new DataView(buf);
+    const w = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+    w(0, 'RIFF'); dv.setUint32(4, 36 + i16.length * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+    dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+    dv.setUint32(24, sr, true); dv.setUint32(28, sr * 2, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true);
+    w(36, 'data'); dv.setUint32(40, i16.length * 2, true);
+    new Int16Array(buf, 44).set(i16);
+    return new Blob([buf], { type: 'audio/wav' });
+  }
+  function loadScript(src) {
+    return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+  }
+  async function mp3Blob(i16, sr) {
+    if (!window.lamejs) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js');
+    const enc = new window.lamejs.Mp3Encoder(1, sr, 128), parts = [];
+    for (let i = 0; i < i16.length; i += 1152) {
+      const b = enc.encodeBuffer(i16.subarray(i, i + 1152)); if (b.length) parts.push(new Int8Array(b));
+    }
+    const end = enc.flush(); if (end.length) parts.push(new Int8Array(end));
+    return new Blob(parts, { type: 'audio/mpeg' });
+  }
+
+  async function exportAudio() {
+    const text = el.text.value.trim();
+    if (!text) { toast('Please enter some text first', 'warn'); el.text.focus(); return; }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia || !window.MediaRecorder) {
+      toast('Audio export needs a desktop browser such as Chrome or Edge.', 'error', 4500); return;
+    }
+    stopSpeech();
+    toast('Choose "This Tab" and tick "Share tab audio"', 'info', 4500);
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true, preferCurrentTab: true, selfBrowserSurface: 'include', systemAudio: 'include' });
+    } catch (e) { toast('Capture cancelled', 'warn'); return; }
+
+    const tracks = stream.getAudioTracks();
+    if (!tracks.length) {
+      stream.getTracks().forEach((t) => t.stop());
+      toast('No audio was shared. Pick "This Tab" and enable "Share tab audio".', 'error', 5000); return;
+    }
+    stream.getVideoTracks().forEach((t) => t.stop());
+
+    const chunks = [];
+    let rec;
+    try { rec = new MediaRecorder(new MediaStream(tracks)); }
+    catch (e) { tracks.forEach((t) => t.stop()); toast('Recording is not supported here.', 'error'); return; }
+    rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+    const stopped = new Promise((r) => (rec.onstop = r));
+
+    setExporting(true, 'Recording speech…');
+    addHistory(text);
+    rec.start(250);
+    const ok = await new Promise((res) => speak(text, res));
+    await sleep(500);
+    if (rec.state !== 'inactive') rec.stop();
+    await stopped;
+    tracks.forEach((t) => t.stop());
+
+    if (!ok || !chunks.length) { setExporting(false); toast('Export cancelled', 'warn'); return; }
+
+    try {
+      setExporting(true, 'Converting…');
+      const raw = await new Blob(chunks, { type: chunks[0].type }).arrayBuffer();
+      const ACtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new ACtx();
+      const decoded = await ctx.decodeAudioData(raw);
+      ctx.close && ctx.close();
+      const mono = trimSilence(toMono(decoded), decoded.sampleRate);
+      const i16 = toInt16(mono);
+      let blob, ext = el.fmt.value;
+      if (ext === 'mp3') {
+        try { blob = await mp3Blob(i16, decoded.sampleRate); }
+        catch (e) { ext = 'wav'; blob = wavBlob(i16, decoded.sampleRate); toast('MP3 encoder unavailable – saved as WAV instead', 'warn', 4000); }
+      } else blob = wavBlob(i16, decoded.sampleRate);
+
+      if (lastURL) URL.revokeObjectURL(lastURL);
+      lastURL = URL.createObjectURL(blob);
+      const d = new Date(), pad = (n) => String(n).padStart(2, '0');
+      el.exportLink.href = lastURL;
+      el.exportLink.download = 'voxflow-' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes()) + '.' + ext;
+      el.exportLink.textContent = 'Download .' + ext.toUpperCase() + ' (' + (blob.size / 1024 / 1024 < 1 ? Math.round(blob.size / 1024) + ' KB' : (blob.size / 1024 / 1024).toFixed(1) + ' MB') + ')';
+      el.exportAudio.src = lastURL;
+      el.exportResult.classList.remove('hidden');
+      toast('Audio export ready', 'success');
+    } catch (err) {
+      console.error(err);
+      toast('Could not process the recording. Try again with tab audio shared.', 'error', 4500);
+    } finally { setExporting(false); }
+  }
+  el.exp.addEventListener('click', exportAudio);
+
+  /* ============ INIT ============ */
+  el.text.value = store.get('vf-draft', '');
+  updateSliders();
+  setState('idle');
+})();
+</script>
+</body>
+</html>
